@@ -2,31 +2,33 @@
 
 **Claude Code から Zotero を直接操作するスキル** — DOI 一括インポート、コレクション管理、キーワード・著者検索
 
-> MCP サーバー不要。追加依存なし。`curl` だけで Zotero ローカル API を直接叩く軽量アプローチ。
+> macOS (Zotero 8.0.3) で動作確認済み。MCP サーバー不要。追加依存なし。`curl` だけで Zotero ローカル API を直接叩く軽量アプローチ。
 
-## ZoteroMCP との違い
+## できること
 
-[ZoteroMCP](https://github.com/54yyyu/zotero-mcp) は Claude Desktop 向けの MCP サーバーとして Zotero を操作しますが、本スキルは異なるアプローチを取っています。
+| コマンド | 説明 |
+|---------|------|
+| `/zotero import <DOIs>` | DOI リストから BibTeX を自動取得して一括インポート |
+| `/zotero import --file dois.txt` | テキストファイルの DOI を一括インポート |
+| `/zotero bibtex file.bib` | BibTeX/RIS ファイルを直接インポート（DOI なし文献対応） |
+| `/zotero collections` | コレクション一覧を表示 |
+| `/zotero list` | 現在選択中コレクションのアイテム一覧 |
+| `/zotero list --collection "名前"` | 指定コレクションのアイテム一覧 |
+| `/zotero search "keyword"` | タイトル・著者名・年でキーワード検索 |
+| `/zotero search "著者名"` | 著者名で文献検索 |
 
-| | **本スキル（直接 API）** | **ZoteroMCP** |
-|---|---|---|
-| **対象** | Claude Code（CLI） | Claude Desktop（GUI） |
-| **依存関係** | なし（`curl` + `python3` のみ） | Node.js + pip/uv でサーバーインストール |
-| **アーキテクチャ** | Zotero HTTP API を直接 `curl` で呼ぶ | MCP サーバープロセスを常駐 |
-| **セットアップ** | スキルフォルダを配置するだけ | `pip install` + JSON 設定ファイル編集 |
-| **書き込み** | Connector API (`/connector/import`) で BibTeX/RIS インポート | Local API or Web API 経由 |
-| **全文検索** | `?q=keyword&qmode=titleCreatorYear` で対応 | 全文検索対応 |
-| **オフライン** | 完全対応（DOI 取得以外） | ローカルAPI モードで対応 |
-| **バッチ処理** | DOI リスト一括インポートスクリプト付き | 個別操作 |
+**バッチ処理例**: 19 件の DOI を含む参考文献リストを渡すと、DOI 自動抽出 → BibTeX 取得 → CrossRef フォールバック → 手動 BibTeX 生成 → 一括インポートまで自動実行。
 
-### 直接 API アプローチの利点
+## 動作環境
 
-1. **ゼロ依存**: MCP サーバーのインストール・起動・管理が不要。`curl` と `python3`（macOS 標準）だけで動作
-2. **透過的**: すべての操作が `curl` コマンドに帰着するため、デバッグが容易で何が起きているか明確
-3. **バッチ処理特化**: 19 件の DOI を一括インポートするような大量操作に最適化されたスクリプト付き
-4. **Claude Code ネイティブ**: CLI 環境でシームレスに動作。`/zotero import` で即実行
-5. **軽量**: 常駐プロセスなし。使うときだけ API を叩き、終わったら何も残らない
-6. **カスタマイズ容易**: シェルスクリプトなので、ワークフローに合わせた改変が簡単
+| 要件 | 詳細 |
+|------|------|
+| **OS** | macOS（動作確認済み） |
+| **Zotero** | 7 / 8（ローカル API 有効化済み） |
+| **Claude Code** | CLI 環境 |
+| **システム依存** | `curl`, `python3`, `openssl`（macOS 標準搭載・追加インストール不要） |
+
+Python は標準ライブラリ（`json`, `sys`）のみ使用。`requirements.txt` は不要です。
 
 ## セットアップ
 
@@ -40,7 +42,6 @@
 ### 2. スキルの配置
 
 ```bash
-# Claude Code のスキルディレクトリにクローン
 git clone https://github.com/shoei05/claude-code-zotero-skill.git ~/.claude/skills/zotero
 ```
 
@@ -101,6 +102,30 @@ curl -s "http://localhost:23119/api/users/0/items?q=psychosis&qmode=titleCreator
 ```
 /zotero list --collection "2602-生成AIとメンタルヘルス"
 ```
+
+## ZoteroMCP との違い
+
+[ZoteroMCP](https://github.com/54yyyu/zotero-mcp) は Claude Desktop 向けの MCP サーバーとして Zotero を操作しますが、本スキルは異なるアプローチを取っています。
+
+| | **本スキル（直接 API）** | **ZoteroMCP** |
+|---|---|---|
+| **対象** | Claude Code（CLI） | Claude Desktop（GUI） |
+| **依存関係** | なし（`curl` + `python3` のみ） | Node.js + pip/uv でサーバーインストール |
+| **アーキテクチャ** | Zotero HTTP API を直接 `curl` で呼ぶ | MCP サーバープロセスを常駐 |
+| **セットアップ** | スキルフォルダを配置するだけ | `pip install` + JSON 設定ファイル編集 |
+| **書き込み** | Connector API (`/connector/import`) で BibTeX/RIS インポート | Local API or Web API 経由 |
+| **全文検索** | `?q=keyword&qmode=titleCreatorYear` で対応 | 全文検索対応 |
+| **オフライン** | 完全対応（DOI 取得以外） | ローカルAPI モードで対応 |
+| **バッチ処理** | DOI リスト一括インポートスクリプト付き | 個別操作 |
+
+### 直接 API アプローチの利点
+
+1. **ゼロ依存**: MCP サーバーのインストール・起動・管理が不要。`curl` と `python3`（macOS 標準）だけで動作
+2. **透過的**: すべての操作が `curl` コマンドに帰着するため、デバッグが容易で何が起きているか明確
+3. **バッチ処理特化**: 19 件の DOI を一括インポートするような大量操作に最適化されたスクリプト付き
+4. **Claude Code ネイティブ**: CLI 環境でシームレスに動作。`/zotero import` で即実行
+5. **軽量**: 常駐プロセスなし。使うときだけ API を叩き、終わったら何も残らない
+6. **カスタマイズ容易**: シェルスクリプトなので、ワークフローに合わせた改変が簡単
 
 ## API アーキテクチャ
 
@@ -180,12 +205,6 @@ curl -s "https://api.crossref.org/works?query.bibliographic=著者名+タイト�
   url = {https://www.apa.org/topics/...}
 }
 ```
-
-## 動作環境
-
-- macOS（`curl`, `python3`, `openssl` が利用可能な環境）
-- Zotero 7 / 8（ローカル API 有効化済み）
-- Claude Code
 
 ## トラブルシューティング
 
