@@ -90,7 +90,6 @@ for c in json.load(sys.stdin):
 | `/api/users/0/items` | GET | 全アイテム |
 
 詳細: [references/api-endpoints.md](references/api-endpoints.md)
-ユースケース: [references/use-cases.md](references/use-cases.md)
 
 ## 重要な注意点
 

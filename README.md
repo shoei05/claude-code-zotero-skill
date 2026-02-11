@@ -173,21 +173,67 @@ curl -s "https://api.crossref.org/works?query.bibliographic=著者名+タイト�
 ├── scripts/
 │   └── zotero_import.sh            # DOI/BibTeX インポートスクリプト
 └── references/
-    ├── api-endpoints.md             # API エンドポイント詳細リファレンス
-    └── use-cases.md                 # ユースケース・活用ガイド
+    └── api-endpoints.md             # API エンドポイント詳細リファレンス
 ```
 
 ## ユースケース
 
-### 系統的レビュー（Systematic Review）
+### 1. DOI 一括インポート
 
-1. PubMed/Google Scholar で文献検索
-2. DOI をテキストファイルに収集
-3. `/zotero import --file dois.txt` で一括登録
-4. Zotero UI でスクリーニング（include/exclude コレクション分け）
-5. `/zotero list --collection "SR - Include"` で選択文献確認
+論文のリファレンスリストや検索結果から DOI を集めて一括登録。
 
-### 参考文献リストからの一括登録
+```
+/zotero import 10.1038/s41746-023-00979-5, 10.2196/78238
+/zotero import --file ~/research/dois.txt --collection "My Review"
+```
+
+**dois.txt の形式**:
+```
+# AI and Mental Health papers
+10.1038/s41746-023-00979-5
+10.2196/78238
+https://doi.org/10.1016/j.compedu.2024.105224
+```
+
+### 2. DOI 不明な文献の検索・登録
+
+CrossRef API で検索 → DOI 特定 → インポート。見つからない場合は手動 BibTeX:
+
+```bibtex
+@article{Pierre2025,
+  title = {Case report title},
+  author = {Pierre, Joseph M. and Gaeta, Bryce},
+  journal = {Innovations in Clinical Neuroscience},
+  volume = {22}, pages = {11-13}, year = {2025}
+}
+```
+
+```
+/zotero bibtex /tmp/paper.bib
+```
+
+### 3. Web ページ・ガイドラインの登録
+
+学会ガイドラインや Web レポートは `@misc` タイプで:
+
+```bibtex
+@misc{APA2025,
+  title = {Health advisory on generative AI chatbots},
+  author = {{American Psychological Association}},
+  year = {2025},
+  url = {https://www.apa.org/topics/...},
+  note = {Retrieved 2026-02-11}
+}
+```
+
+### 4. 系統的レビュー（Systematic Review）ワークフロー
+
+1. **検索・DOI 収集**: PubMed/Scholar → DOI リスト作成
+2. **一括インポート**: `/zotero import --file dois.txt --collection "SR - Screening"`
+3. **スクリーニング**: Zotero UI で include/exclude に分類
+4. **確認**: `/zotero list --collection "SR - Include"`
+
+### 5. 参考文献リストからの一括登録
 
 論文の References セクションのテキストを Claude Code に渡すと:
 1. DOI を自動抽出
@@ -195,16 +241,13 @@ curl -s "https://api.crossref.org/works?query.bibliographic=著者名+タイト�
 3. 見つからない文献は手動 BibTeX 生成
 4. 一括インポート実行
 
-### Web ガイドライン・非論文文献の登録
+### 6. 重複チェック
 
-```bibtex
-@misc{APA2025,
-  title = {Health advisory on generative AI chatbots},
-  author = {{American Psychological Association}},
-  year = {2025},
-  url = {https://www.apa.org/topics/...}
-}
 ```
+/zotero search "キーワード"
+```
+
+Zotero 本体にも重複検出あり（ツール > 重複アイテム）。
 
 ## トラブルシューティング
 
