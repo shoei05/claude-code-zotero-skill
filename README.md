@@ -26,18 +26,18 @@ Zotero が起動していれば、**API キーの取得や外部アカウント�
 
 ### セットアップ（これだけ）
 
-#### 1. スキルを配置
-
-```bash
-git clone https://github.com/shoei05/claude-code-zotero-skill.git ~/.claude/skills/zotero
-```
-
-#### 2. Zotero 側の設定
+#### 1. Zotero 側の設定
 
 1. Zotero を起動
 2. **Zotero > 環境設定 > 詳細**
 3. **「Allow other applications on this computer to communicate with Zotero」** にチェック
 4. `http://localhost:23119/api/` でアクセス可能になる
+
+#### 2. スキルを配置
+
+```bash
+git clone https://github.com/shoei05/claude-code-zotero-skill.git ~/.claude/skills/zotero
+```
 
 #### 3. 接続確認
 
